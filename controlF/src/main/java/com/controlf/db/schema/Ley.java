@@ -1,21 +1,22 @@
 package com.controlf.db.schema;
 
-import java.util.UUID;
 import java.time.LocalDate;
 import com.controlf.db.schema.enums.EstadoLey;
 
 public class Ley {
 
-    private UUID id;
+    private Integer id;
     private String titulo;
     private String descripcionOriginal;
     private String descripcionSimplificada;
     private String categoria;
     private EstadoLey estado;
     private LocalDate fechaIngreso;
-/* 
-    public UUID getId() { return id; }
-    public void setId(UUID id) { this.id = id; }
+
+    /* 
+
+    public Integer getId() { return id; }
+    public void setId(Integer id) { this.id = id; }
 
     public String getTitulo() { return titulo; }
     public void setTitulo(String titulo) { this.titulo = titulo; }
