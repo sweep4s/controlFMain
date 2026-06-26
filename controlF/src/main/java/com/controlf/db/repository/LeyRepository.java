@@ -11,6 +11,9 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 public interface LeyRepository extends JpaRepository<Ley, Integer>, JpaSpecificationExecutor<Ley> {
     Optional<Ley> findByCodigo(String codigo);
 
+    boolean existsByExternalId(Long externalId);
+    Optional<Ley> findByExternalId(Long externalId);
+
     long countByProponente(String proponente);
 
     @org.springframework.data.jpa.repository.Query("SELECT DISTINCT l.categoria FROM Ley l WHERE l.categoria IS NOT NULL")

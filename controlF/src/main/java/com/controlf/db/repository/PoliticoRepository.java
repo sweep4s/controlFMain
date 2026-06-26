@@ -3,6 +3,7 @@ package com.controlf.db.repository;
 import com.controlf.db.schema.Politico;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
+import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
@@ -16,4 +17,6 @@ public interface PoliticoRepository extends JpaRepository<Politico, Integer>, Jp
 
     @org.springframework.data.jpa.repository.Query("SELECT DISTINCT p.comision FROM Politico p WHERE p.comision IS NOT NULL")
     java.util.List<String> findDistinctComisiones();
+
+    Optional<Politico> findByNombreCompletoContainingIgnoreCase(String nombre);
 }

@@ -44,6 +44,9 @@ public class Ley {
 
     private LocalDate fechaIngreso;
 
+    @Column(name = "external_id", unique = true)
+    private Long externalId;
+
     @OneToMany(mappedBy = "ley", cascade = CascadeType.ALL)
     private List<Voto> votos;
 

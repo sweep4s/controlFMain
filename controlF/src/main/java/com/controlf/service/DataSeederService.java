@@ -42,9 +42,9 @@ public class DataSeederService {
         ));
 
         // 2. USUARIOS
-        Usuario u1 = new Usuario(null, "https://i.pravatar.cc/150?u=admin", "admin@controlf.ec", LocalDateTime.now(), "Admin Auditor", "hash", Usuario.Rol.ADMIN);
-        Usuario u2 = new Usuario(null, "https://i.pravatar.cc/150?u=juan", "juan.perez@ecuador.com", LocalDateTime.now(), "Juan Pérez", "hash", Usuario.Rol.CIUDADANO);
-        Usuario u3 = new Usuario(null, "https://i.pravatar.cc/150?u=maria", "maria.lopez@veeduria.ec", LocalDateTime.now(), "Maria López", "hash", Usuario.Rol.CIUDADANO);
+        Usuario u1 = new Usuario(null, "Admin Auditor", "admin@controlf.ec", "hash", "https://i.pravatar.cc/150?u=admin", Usuario.Rol.ADMIN, LocalDateTime.now(), null, null);
+        Usuario u2 = new Usuario(null, "Juan Pérez", "juan.perez@ecuador.com", "hash", "https://i.pravatar.cc/150?u=juan", Usuario.Rol.CIUDADANO, LocalDateTime.now(), null, null);
+        Usuario u3 = new Usuario(null, "Maria López", "maria.lopez@veeduria.ec", "hash", "https://i.pravatar.cc/150?u=maria", Usuario.Rol.CIUDADANO, LocalDateTime.now(), null, null);
         usuarioRepository.saveAll(Arrays.asList(u1, u2, u3));
 
         // 3. POLITICOS
@@ -65,16 +65,19 @@ public class DataSeederService {
         
         Politico p6 = new Politico(null, "Luisa González", "RC5", "Presidenta RC5", "Manabí", "Política Nacional", true, new BigDecimal("110000"), 
             "Abogada. Candidata presidencial 2023 y 2025.", "https://live.staticflickr.com/65535/52340671842_9664a76f47_o.jpg", null, null, null, null);
+ //TEST
+        Politico p7 = new Politico(null, "MARÍA CRISTINA ACUÑA VACA", "INDEPENDIENTE", "Asambleísta", "Pastaza", "Legislativo", true, new BigDecimal("85000"), "Asambleísta Nacional.", null, null, null, null, null);
+           
 
-        politicoRepository.saveAll(Arrays.asList(p1, p2, p3, p4, p5, p6));
+        politicoRepository.saveAll(Arrays.asList(p1, p2, p3, p4, p5, p6 ,p7));
 
         // 4. LEYES
         List<Ley> leyes = new ArrayList<>();
-        leyes.add(new Ley(null, "LEY-IVA-15", "Ley para el Conflicto Armado Interno", null, "Incremento del IVA del 12% al 15% para financiar la guerra contra el crimen.", EstadoLey.APROBADA, LocalDate.of(2024, 2, 1), "Aumento del costo de la canasta básica.", "Daniel Noboa", "Urgente Económico", "Ley de incremento del IVA", null, null, null, null));
-        leyes.add(new Ley(null, "LEY-ENER-01", "Ley de Competitividad Energética", null, "Promueve inversión privada en generación eléctrica para evitar apagones.", EstadoLey.APROBADA, LocalDate.of(2024, 1, 10), "Incentiva proyectos solares y eólicos.", "Daniel Noboa", "Urgente Económico", "Ley No Más Apagones", null, null, null, null));
-        leyes.add(new Ley(null, "LEY-CONSULTA", "Aplicación Consulta Popular 2024", null, "Incremento drástico de penas para terrorismo y sicariato.", EstadoLey.APROBADA, LocalDate.of(2024, 7, 15), "Endurecimiento del sistema carcelario.", "Asamblea Nacional", "Ordinario", "Reformas Consulta Popular", null, null, null, null));
-        leyes.add(new Ley(null, "LEY-TUR-01", "Ley de Fortalecimiento Turístico", null, "Reducción de impuestos para eventos y turismo.", EstadoLey.APROBADA, LocalDate.of(2024, 3, 25), "Incentiva el turismo nacional.", "Daniel Noboa", "Urgente Económico", "Ley de Turismo", null, null, null, null));
-        leyes.add(new Ley(null, "LEY-TRA-01", "Ley de Extradición y Seguridad", null, "Reformas para permitir la extradición de ecuatorianos vinculados al narco.", EstadoLey.APROBADA, LocalDate.of(2024, 5, 10), "Herramienta contra el narcotráfico.", "Asamblea Nacional", "Ordinario", "Ley de Extradición", null, null, null, null));
+        leyes.add(new Ley(null, "Ley para el Conflicto Armado Interno", "LEY-IVA-15", "Incremento del IVA del 12% al 15% para financiar la guerra contra el crimen.", null, "Aumento del costo de la canasta básica.", "Economía", "Daniel Noboa", "Urgente Económico", EstadoLey.APROBADA, LocalDate.of(2024, 2, 1), null, null, null, null, null));
+        leyes.add(new Ley(null, "Ley de Competitividad Energética", "LEY-ENER-01", "Promueve inversión privada en generación eléctrica para evitar apagones.", null, "Incentiva proyectos solares y eólicos.", "Energía", "Daniel Noboa", "Urgente Económico", EstadoLey.APROBADA, LocalDate.of(2024, 1, 10), null, null, null, null, null));
+        leyes.add(new Ley(null, "Aplicación Consulta Popular 2024", "LEY-CONSULTA", "Incremento drástico de penas para terrorismo y sicariato.", null, "Endurecimiento del sistema carcelario.", "Seguridad", "Asamblea Nacional", "Ordinario", EstadoLey.APROBADA, LocalDate.of(2024, 7, 15), null, null, null, null, null));
+        leyes.add(new Ley(null, "Ley de Fortalecimiento Turístico", "LEY-TUR-01", "Reducción de impuestos para eventos y turismo.", null, "Incentiva el turismo nacional.", "Turismo", "Daniel Noboa", "Urgente Económico", EstadoLey.APROBADA, LocalDate.of(2024, 3, 25), null, null, null, null, null));
+        leyes.add(new Ley(null, "Ley de Extradición y Seguridad", "LEY-TRA-01", "Reformas para permitir la extradición de ecuatorianos vinculados al narco.", null, "Herramienta contra el narcotráfico.", "Seguridad", "Asamblea Nacional", "Ordinario", EstadoLey.APROBADA, LocalDate.of(2024, 5, 10), null, null, null, null, null));
         
         leyRepository.saveAll(leyes);
 
@@ -87,24 +90,21 @@ public class DataSeederService {
         promesaRepository.saveAll(promesas);
 
         // 6. VOTOS (Matriz masiva)
-        // Noboa (p1)
-        votoRepository.save(new Voto(null, true, LocalDateTime.now(), TipoVoto.FAVOR, leyes.get(0), p1));
-        votoRepository.save(new Voto(null, true, LocalDateTime.now(), TipoVoto.FAVOR, leyes.get(1), p1));
-        votoRepository.save(new Voto(null, true, LocalDateTime.now(), TipoVoto.FAVOR, leyes.get(3), p1));
-        // Veloz (p3)
-        votoRepository.save(new Voto(null, true, LocalDateTime.now(), TipoVoto.CONTRA, leyes.get(0), p3));
-        votoRepository.save(new Voto(null, true, LocalDateTime.now(), TipoVoto.FAVOR, leyes.get(1), p3));
-        votoRepository.save(new Voto(null, true, LocalDateTime.now(), TipoVoto.CONTRA, leyes.get(4), p3));
-        // Topic (p5)
-        votoRepository.save(new Voto(null, true, LocalDateTime.now(), TipoVoto.FAVOR, leyes.get(0), p5));
-        votoRepository.save(new Voto(null, true, LocalDateTime.now(), TipoVoto.FAVOR, leyes.get(4), p5));
+        votoRepository.save(new Voto(null, TipoVoto.FAVOR, true, LocalDateTime.now(), p1, leyes.get(0)));
+        votoRepository.save(new Voto(null, TipoVoto.FAVOR, true, LocalDateTime.now(), p1, leyes.get(1)));
+        votoRepository.save(new Voto(null, TipoVoto.FAVOR, true, LocalDateTime.now(), p1, leyes.get(3)));
+        votoRepository.save(new Voto(null, TipoVoto.CONTRA, true, LocalDateTime.now(), p3, leyes.get(0)));
+        votoRepository.save(new Voto(null, TipoVoto.FAVOR, true, LocalDateTime.now(), p3, leyes.get(1)));
+        votoRepository.save(new Voto(null, TipoVoto.CONTRA, true, LocalDateTime.now(), p3, leyes.get(4)));
+        votoRepository.save(new Voto(null, TipoVoto.FAVOR, true, LocalDateTime.now(), p5, leyes.get(0)));
+        votoRepository.save(new Voto(null, TipoVoto.FAVOR, true, LocalDateTime.now(), p5, leyes.get(4)));
 
         // 7. VINCULOS
         vinculoRepository.save(new VinculoPromesaLey(null, ImpactoEsperado.NEGATIVO, NivelCoherencia.INCUMPLE, "Aprobó el alza del IVA al 15% pese a prometer repetidamente en campaña que no subiría impuestos.", promesas.get(0), leyes.get(0)));
         vinculoRepository.save(new VinculoPromesaLey(null, ImpactoEsperado.POSITIVO, NivelCoherencia.CUMPLE, "Votó a favor de la extradición tal como prometió en su plan de mano dura.", promesas.get(2), leyes.get(4)));
 
         // 8. SOCIAL
-        Comentario com = new Comentario(null, "El IVA nos está matando el bolsillo, Noboa mintió.", LocalDateTime.now(), true, u2);
+        Comentario com = new Comentario(null, "El IVA nos está matando el bolsillo, Noboa mintió.", true, LocalDateTime.now(), u2);
         comentarioRepository.save(com);
         p1.setComentarios(new ArrayList<>(List.of(com)));
         politicoRepository.save(p1);
