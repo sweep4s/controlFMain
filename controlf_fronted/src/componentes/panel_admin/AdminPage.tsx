@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import PanelControlSeguridad from './COMPONENTE_PANEL_DE_CONTROL/PanelControlSeguridad';
 import MotorCoherencia from './COMPONENTE_MOTOR_COHERENCIA/MotorCoherencia';
 import MantenimientoSistema from './COMPONENTE_MANTENIMIENTO_DEL_SISTEMA/MantenimientoSistema';
@@ -27,6 +27,7 @@ const AdminPage: React.FC = () => {
   const [isSyncingPoliticos, setIsSyncingPoliticos] = useState(false);
   const [politicoSyncResult, setPoliticoSyncResult] = useState<any>(null);
   const [currentPage, setCurrentPage] = useState(1);
+  const politicoDropdownRef = useRef<HTMLDivElement>(null);
   const ITEMS_PER_PAGE = 20;
 
   const fetchData = async () => {
@@ -57,6 +58,19 @@ const AdminPage: React.FC = () => {
       console.error('Error al cargar políticos importables:', error);
     }
   };
+
+  useEffect(() => {
+    if (!showPoliticoDropdown) return;
+
+    const handleClickOutside = (event: MouseEvent) => {
+      if (politicoDropdownRef.current && !politicoDropdownRef.current.contains(event.target as Node)) {
+        setShowPoliticoDropdown(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showPoliticoDropdown]);
 
   useEffect(() => {
     fetchData();
@@ -163,6 +177,11 @@ const AdminPage: React.FC = () => {
     setPoliticoImportResult(null);
   };
 
+  const handleRemoveSelectedPolitico = (id: string) => {
+    setSelectedPoliticoIds((current) => current.filter((politicoId) => politicoId !== id));
+    setPoliticoImportResult(null);
+  };
+
   const handleSyncPoliticos = async () => {
     try {
       setIsSyncingPoliticos(true);
@@ -257,6 +276,7 @@ const AdminPage: React.FC = () => {
     return 'bg-slate-100 text-slate-600 border-slate-200';
   };
 
+  const hasSyncedPoliticos = importablePoliticos.length > 0;
   const totalPages = Math.ceil(votings.length / ITEMS_PER_PAGE);
   const paginatedVotings = votings.slice(
     (currentPage - 1) * ITEMS_PER_PAGE,
@@ -367,168 +387,190 @@ const AdminPage: React.FC = () => {
         onAccion={handleAccionMantenimiento}
       />
 
-      <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden mb-8">
-        <div className="px-8 py-6 border-b border-slate-100 bg-gradient-to-r from-slate-50 to-white">
-          <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
-            <div>
-              <h4 className="text-sm font-black text-primary-navy uppercase tracking-wide flex items-center gap-2">
-                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20V10" /><path d="M18 20V4" /><path d="M6 20v-4" /></svg>
-                Importaciones de datos
-              </h4>
-              <p className="text-sm text-slate-500 mt-1">Elige la opción que mejor se adapte a tu objetivo. Ambas usan los endpoints reales del sistema y no dependen una de la otra.</p>
-            </div>
-            <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold text-slate-600 shadow-sm">
-              <span className="h-2.5 w-2.5 rounded-full bg-accent-blue"></span>
-              Dos modos disponibles
-            </div>
-          </div>
-        </div>
+      
 
-        <div className="p-6 lg:p-8 space-y-6">
-          <section className="rounded-2xl border border-slate-200 bg-slate-50/70 p-5 shadow-sm">
-            <div className="flex items-start gap-3">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-primary-navy text-sm font-black text-white">
-                1
+       
+
+         
+                 
+<div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden mb-8">
+  <div className="px-8 py-6 border-b border-slate-100 bg-gradient-to-r from-slate-50 to-white">
+    <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
+      <div>
+        <h4 className="text-sm font-black text-primary-navy uppercase tracking-wide flex items-center gap-2">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20V10" /><path d="M18 20V4" /><path d="M6 20v-4" /></svg>
+          Importaciones de datos
+        </h4>
+        <p className="text-sm text-slate-500 mt-1">Elige la opción que mejor se adapte a tu objetivo. Ambas usan los endpoints reales del sistema y no dependen una de la otra.</p>
+      </div>
+      <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold text-slate-600 shadow-sm">
+        <span className="h-2.5 w-2.5 rounded-full bg-accent-blue"></span>
+        Dos modos disponibles
+      </div>
+    </div>
+  </div>
+
+  <div className="p-6 lg:p-8 space-y-6">
+    <section className="rounded-2xl border border-slate-200 bg-slate-50/70 p-5 shadow-sm">
+      <div className="flex items-start gap-3">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-primary-navy text-sm font-black text-white">
+          1
+        </div>
+        <div className="flex-1">
+          <div className="inline-flex items-center rounded-full bg-primary-navy px-3 py-1 text-[11px] font-black uppercase tracking-[0.2em] text-white">
+            Sincronización inicial (obligatoria)
+          </div>
+          <h5 className="mt-3 text-lg font-black text-primary-navy">Sincronizar catálogo local</h5>
+          <p className="mt-2 text-sm text-slate-600">Primero debes cargar los candidatos disponibles en la base local desde <span className="font-semibold">/api/admin/import-politicos</span>. Después podrás elegirlos para importar leyes.</p>
+          <div className="mt-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between rounded-2xl border border-slate-200 bg-white p-4">
+            <div>
+              <p className="text-xs font-black uppercase tracking-[0.2em] text-slate-500">Origen de datos</p>
+              <p className="mt-1 text-sm text-slate-600">Esta sincronización guarda candidatos en la base local para que puedan usarse en los flujos posteriores.</p>
+            </div>
+            {!hasSyncedPoliticos ? (
+              <button
+                type="button"
+                onClick={handleSyncPoliticos}
+                disabled={isSyncingPoliticos}
+                className="rounded-xl bg-primary-navy px-4 py-3 text-sm font-black text-white hover:bg-slate-800 transition-all shadow-sm disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {isSyncingPoliticos ? 'Sincronizando...' : 'Sincronizar catálogo local'}
+              </button>
+            ) : (
+              <p className="text-sm font-semibold text-slate-500">El catálogo local ya está sincronizado.</p>
+            )}
+          </div>
+          {politicoSyncResult && (
+            <div className="mt-4 rounded-2xl border border-slate-200 bg-white p-4">
+              <p className="text-xs font-black uppercase tracking-[0.2em] text-slate-500">Resultado de sincronización</p>
+              <div className="mt-3 grid grid-cols-2 lg:grid-cols-4 gap-3">
+                <div className="rounded-xl border border-slate-200 bg-slate-50 p-3"><p className="text-[10px] font-bold text-slate-500 uppercase">Encontrados</p><p className="mt-2 text-xl font-black text-primary-navy">{politicoSyncResult.found ?? 0}</p></div>
+                <div className="rounded-xl border border-slate-200 bg-slate-50 p-3"><p className="text-[10px] font-bold text-slate-500 uppercase">Importados</p><p className="mt-2 text-xl font-black text-primary-navy">{politicoSyncResult.imported ?? 0}</p></div>
+                <div className="rounded-xl border border-slate-200 bg-slate-50 p-3"><p className="text-[10px] font-bold text-slate-500 uppercase">Ignorados</p><p className="mt-2 text-xl font-black text-primary-navy">{politicoSyncResult.ignored ?? 0}</p></div>
+                <div className="rounded-xl border border-slate-200 bg-slate-50 p-3"><p className="text-[10px] font-bold text-slate-500 uppercase">Duplicados</p><p className="mt-2 text-xl font-black text-primary-navy">{politicoSyncResult.duplicates ?? 0}</p></div>
               </div>
-              <div className="flex-1">
-                <div className="inline-flex items-center rounded-full bg-primary-navy px-3 py-1 text-[11px] font-black uppercase tracking-[0.2em] text-white">
-                  Sincronización inicial (obligatoria)
-                </div>
-                <h5 className="mt-3 text-lg font-black text-primary-navy">Sincroniza los políticos antes de importar datos</h5>
-                <p className="mt-2 text-sm text-slate-600">Primero debes cargar los candidatos disponibles en la base local desde <span className="font-semibold">/api/admin/import-politicos</span>. Después podrás elegirlos para importar leyes o votaciones.</p>
-                <div className="mt-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between rounded-2xl border border-slate-200 bg-white p-4">
-                  <div>
-                    <p className="text-xs font-black uppercase tracking-[0.2em] text-slate-500">Origen de datos</p>
-                    <p className="mt-1 text-sm text-slate-600">Esta sincronización guarda candidatos en la base local para que puedan usarse en los flujos posteriores.</p>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={handleSyncPoliticos}
-                    disabled={isSyncingPoliticos}
-                    className="rounded-xl bg-primary-navy px-4 py-3 text-sm font-black text-white hover:bg-slate-800 transition-all shadow-sm disabled:cursor-not-allowed disabled:opacity-60"
-                  >
-                    {isSyncingPoliticos ? 'Sincronizando...' : 'Sincronizar políticos'}
-                  </button>
-                </div>
-                {politicoSyncResult && (
-                  <div className="mt-4 rounded-2xl border border-slate-200 bg-white p-4">
-                    <p className="text-xs font-black uppercase tracking-[0.2em] text-slate-500">Resultado de sincronización</p>
-                    <div className="mt-3 grid grid-cols-2 lg:grid-cols-4 gap-3">
-                      <div className="rounded-xl border border-slate-200 bg-slate-50 p-3"><p className="text-[10px] font-bold text-slate-500 uppercase">Encontrados</p><p className="mt-2 text-xl font-black text-primary-navy">{politicoSyncResult.found ?? 0}</p></div>
-                      <div className="rounded-xl border border-slate-200 bg-slate-50 p-3"><p className="text-[10px] font-bold text-slate-500 uppercase">Importados</p><p className="mt-2 text-xl font-black text-primary-navy">{politicoSyncResult.imported ?? 0}</p></div>
-                      <div className="rounded-xl border border-slate-200 bg-slate-50 p-3"><p className="text-[10px] font-bold text-slate-500 uppercase">Ignorados</p><p className="mt-2 text-xl font-black text-primary-navy">{politicoSyncResult.ignored ?? 0}</p></div>
-                      <div className="rounded-xl border border-slate-200 bg-slate-50 p-3"><p className="text-[10px] font-bold text-slate-500 uppercase">Duplicados</p><p className="mt-2 text-xl font-black text-primary-navy">{politicoSyncResult.duplicates ?? 0}</p></div>
-                    </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </section>
+
+    <section className="rounded-2xl border border-slate-200 bg-slate-50/70 p-5 shadow-sm">
+      <div className="flex items-start gap-3">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-accent-blue text-sm font-black text-white">
+          2
+        </div>
+        <div className="flex-1">
+          <div className="inline-flex items-center rounded-full bg-accent-blue px-3 py-1 text-[11px] font-black uppercase tracking-[0.2em] text-white">
+            Selección de candidatos sincronizados
+          </div>
+          <h5 className="mt-3 text-lg font-black text-primary-navy">Elige los políticos ya guardados en la base local</h5>
+          <p className="mt-2 text-sm text-slate-600">Esta lista se alimenta de <span className="font-semibold">/api/politicos/importables</span>, es decir, de los candidatos que ya están disponibles localmente después de la sincronización inicial.</p>
+          <div className="mt-4 rounded-2xl border border-slate-200 bg-white p-4">
+            <p className="text-xs font-black uppercase tracking-[0.2em] text-slate-500">Candidatos disponibles</p>
+            {isLoadingMembers ? (
+              <p className="mt-3 text-sm text-slate-600">Cargando candidatos sincronizados...</p>
+            ) : (
+              <div ref={politicoDropdownRef} className="relative mt-3">
+                <input
+                  type="text"
+                  value={politicoSearch}
+                  onChange={(e) => handlePoliticoSearchChange(e.target.value)}
+                  onFocus={() => setShowPoliticoDropdown(true)}
+                  placeholder="Buscar candidato sincronizado..."
+                  className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 shadow-sm focus:border-accent-blue focus:outline-none"
+                />
+
+                {showPoliticoDropdown && (
+                  <div className="absolute z-10 w-full mt-1 bg-white border border-slate-200 rounded-xl shadow-lg max-h-64 overflow-y-auto">
+                    {filteredImportablePoliticos.length > 0 ? (
+                      filteredImportablePoliticos.map((politico) => {
+                        const isSelected = selectedPoliticoIds.includes(politico.id);
+
+                        return (
+                          <div
+                            key={politico.id}
+                            onClick={() => handlePoliticoSelect(politico)}
+                            className={`px-4 py-3 text-sm text-slate-700 cursor-pointer hover:bg-slate-50 border-b border-slate-100 last:border-0 ${isSelected ? 'bg-accent-blue/10 text-accent-blue font-bold' : ''}`}
+                          >
+                            {politico.label}
+                          </div>
+                        );
+                      })
+                    ) : (
+                      <div className="px-4 py-3 text-sm text-slate-400 italic">Sin candidatos sincronizados</div>
+                    )}
                   </div>
                 )}
               </div>
+            )}
+
+            {selectedPoliticoIds.length > 0 && (
+              <div className="mt-3 flex flex-wrap gap-2">
+                {selectedPoliticoIds.map((id) => {
+                  const politico = importablePoliticos.find((item) => item.id === id);
+                  return (
+                    <span key={id} className="inline-flex items-center gap-2 rounded-full border border-accent-blue/20 bg-accent-blue/10 px-3 py-1 text-xs font-bold text-accent-blue">
+                      <span>{politico?.label ?? id}</span>
+                      <button
+                        type="button"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          handleRemoveSelectedPolitico(id);
+                        }}
+                        className="flex h-4 w-4 items-center justify-center rounded-full bg-white text-[10px] font-black text-slate-600 hover:text-rose-600"
+                        aria-label={`Eliminar ${politico?.label ?? 'candidato'}`}
+                      >
+                        ×
+                      </button>
+                    </span>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div className="flex flex-col gap-6">
+      <section className="rounded-2xl border border-slate-200 bg-slate-50/70 p-5 shadow-sm">
+        <div className="flex items-start gap-3">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-primary-navy text-sm font-black text-white">
+            3A
+          </div>
+          <div className="flex-1">
+            <div className="inline-flex items-center rounded-full bg-primary-navy px-3 py-1 text-[11px] font-black uppercase tracking-[0.2em] text-white">
+              Importar leyes por candidato
             </div>
-          </section>
-
-          <section className="rounded-2xl border border-slate-200 bg-slate-50/70 p-5 shadow-sm">
-            <div className="flex items-start gap-3">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-accent-blue text-sm font-black text-white">
-                2
-              </div>
-              <div className="flex-1">
-                <div className="inline-flex items-center rounded-full bg-accent-blue px-3 py-1 text-[11px] font-black uppercase tracking-[0.2em] text-white">
-                  Selección de candidatos sincronizados
-                </div>
-                <h5 className="mt-3 text-lg font-black text-primary-navy">Elige los políticos ya guardados en la base local</h5>
-                <p className="mt-2 text-sm text-slate-600">Esta lista se alimenta de <span className="font-semibold">/api/politicos/importables</span>, es decir, de los candidatos que ya están disponibles localmente después de la sincronización inicial.</p>
-                <div className="mt-4 rounded-2xl border border-slate-200 bg-white p-4">
-                  <p className="text-xs font-black uppercase tracking-[0.2em] text-slate-500">Candidatos disponibles</p>
-                  {isLoadingMembers ? (
-                    <p className="mt-3 text-sm text-slate-600">Cargando candidatos sincronizados...</p>
-                  ) : (
-                    <div className="relative mt-3">
-                      <input
-                        type="text"
-                        value={politicoSearch}
-                        onChange={(e) => handlePoliticoSearchChange(e.target.value)}
-                        onFocus={() => setShowPoliticoDropdown(true)}
-                        placeholder="Buscar candidato sincronizado..."
-                        className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 shadow-sm focus:border-accent-blue focus:outline-none"
-                      />
-
-                      {showPoliticoDropdown && (
-                        <div className="absolute z-10 w-full mt-1 bg-white border border-slate-200 rounded-xl shadow-lg max-h-64 overflow-y-auto">
-                          {filteredImportablePoliticos.length > 0 ? (
-                            filteredImportablePoliticos.map((politico) => {
-                              const isSelected = selectedPoliticoIds.includes(politico.id);
-
-                              return (
-                                <div
-                                  key={politico.id}
-                                  onClick={() => handlePoliticoSelect(politico)}
-                                  className={`px-4 py-3 text-sm text-slate-700 cursor-pointer hover:bg-slate-50 border-b border-slate-100 last:border-0 ${isSelected ? 'bg-accent-blue/10 text-accent-blue font-bold' : ''}`}
-                                >
-                                  {politico.label}
-                                </div>
-                              );
-                            })
-                          ) : (
-                            <div className="px-4 py-3 text-sm text-slate-400 italic">Sin candidatos sincronizados</div>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  )}
-
-                  {selectedPoliticoIds.length > 0 && (
-                    <div className="mt-3 flex flex-wrap gap-2">
-                      {selectedPoliticoIds.map((id) => {
-                        const politico = importablePoliticos.find((item) => item.id === id);
-                        return (
-                          <span key={id} className="inline-flex items-center rounded-full border border-accent-blue/20 bg-accent-blue/10 px-3 py-1 text-xs font-bold text-accent-blue">
-                            {politico?.label ?? id}
-                          </span>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
-              </div>
+            <h5 className="mt-3 text-lg font-black text-primary-navy">Importar leyes y datos relacionados desde la base local</h5>
+            <p className="mt-2 text-sm text-slate-600">Conserva el comportamiento actual del backend: toma los candidatos seleccionados y los envía a <span className="font-semibold">/admin/import-leyes</span>. En este flujo también puede persistirse información relacionada de votaciones.</p>
+            <div className="mt-4 rounded-2xl border border-slate-200 bg-white p-4">
+              <p className="text-xs font-black uppercase tracking-[0.2em] text-slate-500">Confirmar importación</p>
+              <button
+                type="button"
+                onClick={handleImportLeyesPorPoliticos}
+                disabled={isImportingPoliticos || selectedPoliticoIds.length === 0}
+                className="mt-3 w-full rounded-xl bg-primary-navy px-4 py-3 text-sm font-black text-white hover:bg-slate-800 transition-all shadow-sm disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {isImportingPoliticos ? 'Importando leyes...' : 'Importar leyes por candidato'}
+              </button>
             </div>
-          </section>
-
-          <div className="grid gap-6 xl:grid-cols-2">
-            <section className="rounded-2xl border border-slate-200 bg-slate-50/70 p-5 shadow-sm">
-              <div className="flex items-start gap-3">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-primary-navy text-sm font-black text-white">
-                  3A
-                </div>
-                <div className="flex-1">
-                  <div className="inline-flex items-center rounded-full bg-primary-navy px-3 py-1 text-[11px] font-black uppercase tracking-[0.2em] text-white">
-                    Importar todo
-                  </div>
-                  <h5 className="mt-3 text-lg font-black text-primary-navy">Importar leyes y datos relacionados desde la base local</h5>
-                  <p className="mt-2 text-sm text-slate-600">Conserva el comportamiento actual del backend: toma los candidatos seleccionados y los envía a <span className="font-semibold">/admin/import-leyes</span>. En este flujo también puede persistirse información relacionada de votaciones.</p>
-                  <div className="mt-4 rounded-2xl border border-slate-200 bg-white p-4">
-                    <p className="text-xs font-black uppercase tracking-[0.2em] text-slate-500">Confirmar importación</p>
-                    <button
-                      type="button"
-                      onClick={handleImportLeyesPorPoliticos}
-                      disabled={isImportingPoliticos || selectedPoliticoIds.length === 0}
-                      className="mt-3 w-full rounded-xl bg-primary-navy px-4 py-3 text-sm font-black text-white hover:bg-slate-800 transition-all shadow-sm disabled:cursor-not-allowed disabled:opacity-60"
-                    >
-                      {isImportingPoliticos ? 'Importando datos...' : 'Importar datos para los candidatos seleccionados'}
-                    </button>
-                  </div>
-                  {politicoImportResult && (
-                    <div className="mt-4 rounded-2xl border border-slate-200 bg-white p-4">
-                      <p className="text-xs font-black uppercase tracking-[0.2em] text-slate-500">Resultado</p>
-                      <div className="mt-4 grid grid-cols-2 lg:grid-cols-4 gap-3">
-                        <div className="rounded-xl border border-slate-200 bg-slate-50 p-3"><p className="text-[10px] font-bold text-slate-500 uppercase">Solicitados</p><p className="mt-2 text-xl font-black text-primary-navy">{politicoImportResult.found}</p></div>
-                        <div className="rounded-xl border border-slate-200 bg-slate-50 p-3"><p className="text-[10px] font-bold text-slate-500 uppercase">Importadas</p><p className="mt-2 text-xl font-black text-primary-navy">{politicoImportResult.imported}</p></div>
-                        <div className="rounded-xl border border-slate-200 bg-slate-50 p-3"><p className="text-[10px] font-bold text-slate-500 uppercase">Ignoradas</p><p className="mt-2 text-xl font-black text-primary-navy">{politicoImportResult.ignored}</p></div>
-                        <div className="rounded-xl border border-slate-200 bg-slate-50 p-3"><p className="text-[10px] font-bold text-slate-500 uppercase">Duplicadas</p><p className="mt-2 text-xl font-black text-primary-navy">{politicoImportResult.duplicates}</p></div>
-                      </div>
-                    </div>
-                  )}
+            {politicoImportResult && (
+              <div className="mt-4 rounded-2xl border border-slate-200 bg-white p-4">
+                <p className="text-xs font-black uppercase tracking-[0.2em] text-slate-500">Resultado</p>
+                <div className="mt-4 grid grid-cols-2 lg:grid-cols-4 gap-3">
+                  <div className="rounded-xl border border-slate-200 bg-slate-50 p-3"><p className="text-[10px] font-bold text-slate-500 uppercase">Solicitados</p><p className="mt-2 text-xl font-black text-primary-navy">{politicoImportResult.found}</p></div>
+                  <div className="rounded-xl border border-slate-200 bg-slate-50 p-3"><p className="text-[10px] font-bold text-slate-500 uppercase">Importadas</p><p className="mt-2 text-xl font-black text-primary-navy">{politicoImportResult.imported}</p></div>
+                  <div className="rounded-xl border border-slate-200 bg-slate-50 p-3"><p className="text-[10px] font-bold text-slate-500 uppercase">Ignoradas</p><p className="mt-2 text-xl font-black text-primary-navy">{politicoImportResult.ignored}</p></div>
+                  <div className="rounded-xl border border-slate-200 bg-slate-50 p-3"><p className="text-[10px] font-bold text-slate-500 uppercase">Duplicadas</p><p className="mt-2 text-xl font-black text-primary-navy">{politicoImportResult.duplicates}</p></div>
                 </div>
               </div>
-            </section>
+            )}
+          </div>
+        </div>
+      </section>
+          
 
             <section className="rounded-2xl border border-slate-200 bg-slate-50/70 p-5 shadow-sm">
               <div className="flex items-start gap-3">
