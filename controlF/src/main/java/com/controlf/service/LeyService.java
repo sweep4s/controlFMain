@@ -33,6 +33,7 @@ public class LeyService {
     private final ComentarioRepository comentarioRepository;
     private final UsuarioRepository usuarioRepository;
     private final com.controlf.db.repository.PoliticoRepository politicoRepository;
+    private final GeminiService geminiService;
 
     private static final int CALIFICACION_MAXIMA = 5;
 
@@ -176,6 +177,22 @@ public class LeyService {
                 .impactoSocial(ley.getImpactoSocial())
                 .build();
     }
+
+    @Transactional
+    public ContenidoLeyDTO explicarLey(Integer id) {
+        Ley ley = leyRepository.findById(id).orElseThrow();
+        
+        if (ley.getDescripcionSimplificada() != null && !ley.getDescripcionSimplificada().isBlank()) {
+            return getContenidoLey(id);
+        }
+        
+        String explicacion = geminiService.generarExplicacion(ley.getTitulo(), ley.getDescripcionOriginal());
+        ley.setDescripcionSimplificada(explicacion);
+        leyRepository.save(ley);
+        
+        return getContenidoLey(id);
+    }
+
 
     public DebateCiudadanoDTO getDebateCiudadano(Integer leyId) {
         Ley ley = leyRepository.findById(leyId).orElseThrow();

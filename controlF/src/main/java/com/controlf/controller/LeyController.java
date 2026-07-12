@@ -27,6 +27,12 @@ public class LeyController {
         return leyService.getFullPerfilLey(id);
     }
 
+    @PostMapping("/{id}/explicar")
+    public ContenidoLeyDTO explicar(@PathVariable Integer id) {
+        return leyService.explicarLey(id);
+    }
+
+
     @GetMapping("/filtros")
     public FiltrosLeyDTO getFiltros() {
         return leyService.getFiltros();

@@ -99,4 +99,38 @@ class BackendWorkflowTests {
         assertThat(reporte.getTotalVotos()).isEqualTo(1);
         assertThat(reporte.getVotosContra()).isEqualTo(0);
     }
+
+    @Test
+    void shouldReturnCachedExplanationIfPresent() {
+        Ley ley = new Ley();
+        ley.setTitulo("Ley con resumen");
+        ley.setCodigo("LEY-CACHED-1");
+        ley.setDescripcionOriginal("Texto original largo");
+        ley.setDescripcionSimplificada("Esta es la explicacion simplificada ya guardada");
+        ley.setEstado(EstadoLey.DEBATE);
+        ley.setFechaIngreso(LocalDate.now());
+        ley = leyRepository.save(ley);
+
+        com.controlf.dto.ContenidoLeyDTO response = leyService.explicarLey(ley.getId());
+        assertThat(response.getResumenEjecutivo()).isEqualTo("Esta es la explicacion simplificada ya guardada");
+    }
+
+    @Test
+    void shouldThrowExceptionWhenApiKeyIsMissingAndNoCache() {
+        Ley ley = new Ley();
+        ley.setTitulo("Ley sin resumen");
+        ley.setCodigo("LEY-NOCACHE-1");
+        ley.setDescripcionOriginal("Texto original largo");
+        ley.setDescripcionSimplificada(null);
+        ley.setEstado(EstadoLey.DEBATE);
+        ley.setFechaIngreso(LocalDate.now());
+        ley = leyRepository.save(ley);
+
+        final Integer leyId = ley.getId();
+        org.junit.jupiter.api.Assertions.assertThrows(
+                org.springframework.web.server.ResponseStatusException.class,
+                () -> leyService.explicarLey(leyId)
+        );
+    }
 }
+
