@@ -74,13 +74,17 @@ public class DataSeederService {
         politicoRepository.saveAll(Arrays.asList(p1, p2, p3, p4, p5, p6 ,p7, p8));
 
         // 4. LEYES
+        // Orden del constructor @AllArgsConstructor de Ley:
+        // (id, titulo, codigo, tipoExpediente, proponente, descripcionOriginal,
+        //  descripcionSimplificada, impactoSocial, categoria, estado, fechaIngreso,
+        //  externalId, votos, comentarios, calificaciones, vinculos)
         List<Ley> leyes = new ArrayList<>();
-        leyes.add(new Ley(null, "Ley para el Conflicto Armado Interno", "LEY-IVA-15", "Incremento del IVA del 12% al 15% para financiar la guerra contra el crimen.", null, "Aumento del costo de la canasta básica.", "Economía", "Daniel Noboa", "Urgente Económico", EstadoLey.APROBADA, LocalDate.of(2024, 2, 1), null, null, null, null, null));
-        leyes.add(new Ley(null, "Ley de Competitividad Energética", "LEY-ENER-01", "Promueve inversión privada en generación eléctrica para evitar apagones.", null, "Incentiva proyectos solares y eólicos.", "Energía", "Daniel Noboa", "Urgente Económico", EstadoLey.APROBADA, LocalDate.of(2024, 1, 10), null, null, null, null, null));
-        leyes.add(new Ley(null, "Aplicación Consulta Popular 2024", "LEY-CONSULTA", "Incremento drástico de penas para terrorismo y sicariato.", null, "Endurecimiento del sistema carcelario.", "Seguridad", "Asamblea Nacional", "Ordinario", EstadoLey.APROBADA, LocalDate.of(2024, 7, 15), null, null, null, null, null));
-        leyes.add(new Ley(null, "Ley de Fortalecimiento Turístico", "LEY-TUR-01", "Reducción de impuestos para eventos y turismo.", null, "Incentiva el turismo nacional.", "Turismo", "Daniel Noboa", "Urgente Económico", EstadoLey.APROBADA, LocalDate.of(2024, 3, 25), null, null, null, null, null));
-        leyes.add(new Ley(null, "Ley de Extradición y Seguridad", "LEY-TRA-01", "Reformas para permitir la extradición de ecuatorianos vinculados al narco.", null, "Herramienta contra el narcotráfico.", "Seguridad", "Asamblea Nacional", "Ordinario", EstadoLey.APROBADA, LocalDate.of(2024, 5, 10), null, null, null, null, null));
-        
+        leyes.add(new Ley(null, "Ley para el Conflicto Armado Interno", "LEY-IVA-15", "Urgente Económico", "Daniel Noboa", "Incremento del IVA del 12% al 15% para financiar la guerra contra el crimen.", null, "Aumento del costo de la canasta básica.", "Economía", EstadoLey.APROBADA, LocalDate.of(2024, 2, 1), null, null, null, null, null));
+        leyes.add(new Ley(null, "Ley de Competitividad Energética", "LEY-ENER-01", "Urgente Económico", "Daniel Noboa", "Promueve inversión privada en generación eléctrica para evitar apagones.", null, "Incentiva proyectos solares y eólicos.", "Energía", EstadoLey.APROBADA, LocalDate.of(2024, 1, 10), null, null, null, null, null));
+        leyes.add(new Ley(null, "Aplicación Consulta Popular 2024", "LEY-CONSULTA", "Ordinario", "Asamblea Nacional", "Incremento drástico de penas para terrorismo y sicariato.", null, "Endurecimiento del sistema carcelario.", "Seguridad", EstadoLey.APROBADA, LocalDate.of(2024, 7, 15), null, null, null, null, null));
+        leyes.add(new Ley(null, "Ley de Fortalecimiento Turístico", "LEY-TUR-01", "Urgente Económico", "Daniel Noboa", "Reducción de impuestos para eventos y turismo.", null, "Incentiva el turismo nacional.", "Turismo", EstadoLey.APROBADA, LocalDate.of(2024, 3, 25), null, null, null, null, null));
+        leyes.add(new Ley(null, "Ley de Extradición y Seguridad", "LEY-TRA-01", "Ordinario", "Asamblea Nacional", "Reformas para permitir la extradición de ecuatorianos vinculados al narco.", null, "Herramienta contra el narcotráfico.", "Seguridad", EstadoLey.APROBADA, LocalDate.of(2024, 5, 10), null, null, null, null, null));
+
         leyRepository.saveAll(leyes);
 
         // 5. PROMESAS
@@ -92,14 +96,17 @@ public class DataSeederService {
         promesaRepository.saveAll(promesas);
 
         // 6. VOTOS (Matriz masiva)
-        votoRepository.save(new Voto(null, TipoVoto.FAVOR, true, LocalDateTime.now(), p1, leyes.get(0)));
-        votoRepository.save(new Voto(null, TipoVoto.FAVOR, true, LocalDateTime.now(), p1, leyes.get(1)));
-        votoRepository.save(new Voto(null, TipoVoto.FAVOR, true, LocalDateTime.now(), p1, leyes.get(3)));
-        votoRepository.save(new Voto(null, TipoVoto.CONTRA, true, LocalDateTime.now(), p3, leyes.get(0)));
-        votoRepository.save(new Voto(null, TipoVoto.FAVOR, true, LocalDateTime.now(), p3, leyes.get(1)));
-        votoRepository.save(new Voto(null, TipoVoto.CONTRA, true, LocalDateTime.now(), p3, leyes.get(4)));
-        votoRepository.save(new Voto(null, TipoVoto.FAVOR, true, LocalDateTime.now(), p5, leyes.get(0)));
-        votoRepository.save(new Voto(null, TipoVoto.FAVOR, true, LocalDateTime.now(), p5, leyes.get(4)));
+        // La fecha de cada voto es la de ingreso de su ley (la votación ocurre en esa
+        // sesión), no "ahora": así la serie mensual refleja las fechas reales y no se
+        // concentra todo en el mes actual.
+        votoRepository.save(new Voto(null, TipoVoto.FAVOR, true, leyes.get(0).getFechaIngreso().atStartOfDay(), p1, leyes.get(0)));
+        votoRepository.save(new Voto(null, TipoVoto.FAVOR, true, leyes.get(1).getFechaIngreso().atStartOfDay(), p1, leyes.get(1)));
+        votoRepository.save(new Voto(null, TipoVoto.FAVOR, true, leyes.get(3).getFechaIngreso().atStartOfDay(), p1, leyes.get(3)));
+        votoRepository.save(new Voto(null, TipoVoto.CONTRA, true, leyes.get(0).getFechaIngreso().atStartOfDay(), p3, leyes.get(0)));
+        votoRepository.save(new Voto(null, TipoVoto.FAVOR, true, leyes.get(1).getFechaIngreso().atStartOfDay(), p3, leyes.get(1)));
+        votoRepository.save(new Voto(null, TipoVoto.CONTRA, true, leyes.get(4).getFechaIngreso().atStartOfDay(), p3, leyes.get(4)));
+        votoRepository.save(new Voto(null, TipoVoto.FAVOR, true, leyes.get(0).getFechaIngreso().atStartOfDay(), p5, leyes.get(0)));
+        votoRepository.save(new Voto(null, TipoVoto.FAVOR, true, leyes.get(4).getFechaIngreso().atStartOfDay(), p5, leyes.get(4)));
 
         // 7. VINCULOS
         vinculoRepository.save(new VinculoPromesaLey(null, ImpactoEsperado.NEGATIVO, NivelCoherencia.INCUMPLE, "Aprobó el alza del IVA al 15% pese a prometer repetidamente en campaña que no subiría impuestos.", promesas.get(0), leyes.get(0)));

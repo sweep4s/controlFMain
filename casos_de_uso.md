@@ -1,3 +1,4 @@
+
 Perfecto. Si el sistema solo tiene **dos actores (Administrador y Usuario)**, los casos de uso quedan más simples y consistentes.
 
 ## Actores

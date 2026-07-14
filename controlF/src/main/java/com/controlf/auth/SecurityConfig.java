@@ -54,6 +54,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/dashboard/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/auth/**").permitAll()
                         .requestMatchers("/api/admin/**", "/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/api/validacion/**").hasAnyRole("VALIDADOR", "ADMIN")
                         .requestMatchers(HttpMethod.POST, "/api/leyes/*/import-voting-detail").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.POST, "/api/leyes/*/comentarios", "/api/leyes/*/calificaciones", "/api/politicos/*/comentarios", "/api/politicos/*/calificaciones").hasAnyRole("CIUDADANO", "ADMIN")
                         .requestMatchers(HttpMethod.PATCH, "/api/leyes/*/categoria", "/api/leyes/*/estado", "/api/leyes/*/votos/*/asistencia", "/api/politicos/*").hasRole("ADMIN")

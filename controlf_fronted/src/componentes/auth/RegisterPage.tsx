@@ -22,6 +22,7 @@ const FRASES = [
 const ROLES_DISPONIBLES = [
   { value: 'CIUDADANO', label: 'Ciudadano' },
   { value: 'ADMIN', label: 'Administrador' },
+  { value: 'VALIDADOR', label: 'Validador' },
 ];
 
 interface FieldErrors {

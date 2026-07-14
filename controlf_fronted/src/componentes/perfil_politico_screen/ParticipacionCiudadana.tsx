@@ -6,12 +6,20 @@ import { type ComentarioDebate } from './type_perfil_politico';
 interface ParticipacionCiudadanaProps {
   comentarios: ComentarioDebate[];
   onAddComentario: (texto: string, puntaje: number) => void;
+  tipoEntidad?: 'politico' | 'ley';
 }
 
-const ParticipacionCiudadana: React.FC<ParticipacionCiudadanaProps> = ({ comentarios, onAddComentario }) => {
+const ParticipacionCiudadana: React.FC<ParticipacionCiudadanaProps> = ({ comentarios, onAddComentario, tipoEntidad = 'politico' }) => {
   const [nuevoComentario, setNuevoComentario] = useState('');
   const [puntaje, setPuntaje] = useState(0);
   const { isAuthenticated } = useAuth();
+
+  // Textos adaptados al contexto (político vs ley) para no reutilizar copy incorrecto (CF-026).
+  const esLey = tipoEntidad === 'ley';
+  const tituloCalificar = esLey ? 'Califica esta ley' : 'Califica a este político';
+  const placeholderOpinion = esLey
+    ? 'Escribe tu opinión sobre esta ley...'
+    : 'Escribe tu análisis sobre su coherencia...';
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -33,7 +41,7 @@ const ParticipacionCiudadana: React.FC<ParticipacionCiudadanaProps> = ({ comenta
         {/* Formulario de participación */}
         <div className="space-y-6">
           <div className="bg-slate-50 rounded-xl p-6 border border-slate-100">
-            <h5 className="text-sm font-bold text-slate-700 mb-4">Califica a este político</h5>
+            <h5 className="text-sm font-bold text-slate-700 mb-4">{tituloCalificar}</h5>
             {!isAuthenticated ? (
               <div className="rounded-xl border border-slate-200 bg-white p-4 text-sm text-slate-600">
                 Inicia sesión para publicar comentarios y calificaciones. <Link to="/login" className="font-semibold text-accent-blue">Entrar ahora</Link>
@@ -62,7 +70,7 @@ const ParticipacionCiudadana: React.FC<ParticipacionCiudadanaProps> = ({ comenta
                 <textarea
                   value={nuevoComentario}
                   onChange={(e) => setNuevoComentario(e.target.value)}
-                  placeholder="Escribe tu análisis sobre su coherencia..."
+                  placeholder={placeholderOpinion}
                   className="w-full h-32 px-4 py-3 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-accent-blue/20 focus:border-accent-blue transition-all"
                 />
               </div>
@@ -102,6 +110,12 @@ const ParticipacionCiudadana: React.FC<ParticipacionCiudadanaProps> = ({ comenta
                       <div className="text-xs font-bold text-slate-700">{c.usuario}</div>
                       <div className="text-[10px] text-slate-400">{c.fecha}</div>
                     </div>
+                    {typeof c.puntaje === 'number' && c.puntaje > 0 && (
+                      <div className="flex items-center gap-1 rounded-full bg-warning-amber/10 px-2 py-1" title={`Calificación: ${c.puntaje} de 5`}>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="currentColor" className="text-warning-amber"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" /></svg>
+                        <span className="text-[10px] font-black text-warning-amber">{c.puntaje}/5</span>
+                      </div>
+                    )}
                   </div>
                   <p className="text-xs text-slate-600 leading-relaxed bg-slate-50 p-3 rounded-lg border border-slate-50">
                     "{c.mensaje}"

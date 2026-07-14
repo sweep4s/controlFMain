@@ -11,6 +11,14 @@ export type ComentarioDebate = {
   mensaje: string;
   fecha: string;
   avatarUrl: string;
+  puntaje?: number | null;
+};
+
+export type HistorialCambioPerfil = {
+  campo: string;
+  valorAnterior: string | null;
+  valorNuevo: string | null;
+  fecha: string;
 };
 
 export type PerfilPolitico = {
@@ -24,6 +32,10 @@ export type PerfilPolitico = {
   estaActivo: boolean;
   porcentajeCoherencia: number;
   estadoEtiqueta: string;
+  indiceReputacion: number;
+  totalCalificaciones: number;
+  etiquetaReputacion: string;
   historial: IHistorialCoherencia[];
+  historialCambios: HistorialCambioPerfil[];
   comentarios: ComentarioDebate[];
 };

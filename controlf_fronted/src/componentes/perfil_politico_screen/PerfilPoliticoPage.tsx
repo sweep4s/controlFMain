@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import InfoBasica from './InfoBasica';
 import MetricaCoherencia from './MetricaCoherencia';
+import IndiceReputacion from './IndiceReputacion';
 import HistorialCoherencia from './HistorialCoherencia';
 import ParticipacionCiudadana from './ParticipacionCiudadana';
 import { type PerfilPolitico } from './type_perfil_politico';
@@ -38,6 +39,15 @@ const PerfilPoliticoPage: React.FC = () => {
       if (!response.ok) throw new Error("Perfil no encontrado");
       const data = await response.json();
       setPerfil(data);
+      // Historial persistente de cambios (CF-005): se toma del backend, no solo de la sesión.
+      const cambios = Array.isArray(data.historialCambios) ? data.historialCambios : [];
+      setHistorialCambios(
+        cambios.map((h: { campo: string; valorNuevo: string | null; fecha: string }) => ({
+          campo: h.campo,
+          valor: h.valorNuevo ?? '—',
+          fecha: h.fecha ? h.fecha.replace('T', ' ').slice(0, 16) : ''
+        }))
+      );
     } catch (error) {
       console.error("Error al cargar el perfil:", error);
       navigate('/'); // Volver al directorio si hay error
@@ -69,7 +79,7 @@ const PerfilPoliticoPage: React.FC = () => {
       await apiFetch(`/api/politicos/${id}/comentarios`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ texto })
+        body: JSON.stringify({ texto, puntaje })
       });
 
       await apiFetch(`/api/politicos/${id}/calificaciones`, {
@@ -130,17 +140,9 @@ const PerfilPoliticoPage: React.FC = () => {
 
       if (!response.ok) throw new Error('No se pudo actualizar el campo');
 
-      const fecha = new Date().toLocaleString('es-EC', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-      });
-
-      setHistorialCambios((prev) => [{ campo: campoEdicion, valor: valorEdicion.trim(), fecha }, ...prev]);
       setValorEdicion('');
       setMensajeEdicion(`Cambio guardado en ${campoEdicion === 'patrimonio' ? 'patrimonio' : 'antecedentes'}.`);
+      // El historial persistente se recarga desde el backend (CF-005).
       await fetchPerfil();
     } catch (error) {
       console.error('Error al actualizar político:', error);
@@ -226,7 +228,7 @@ const PerfilPoliticoPage: React.FC = () => {
 
         {historialCambios.length > 0 && (
           <div className="mt-6 rounded-xl border border-slate-100 bg-slate-50 p-4">
-            <h4 className="text-sm font-bold uppercase tracking-wide text-slate-500 mb-3">Historial reciente</h4>
+            <h4 className="text-sm font-bold uppercase tracking-wide text-slate-500 mb-3">Historial de cambios (persistente)</h4>
             <ul className="space-y-2 text-sm text-slate-600">
               {historialCambios.map((item, index) => (
                 <li key={`${item.campo}-${index}`} className="flex flex-wrap items-center gap-2">
@@ -298,12 +300,18 @@ const PerfilPoliticoPage: React.FC = () => {
         )}
       </div>
 
-      <MetricaCoherencia 
+      <MetricaCoherencia
         porcentaje={perfil.porcentajeCoherencia}
         estadoEtiqueta={perfil.estadoEtiqueta}
       />
 
-      <HistorialCoherencia 
+      <IndiceReputacion
+        indice={perfil.indiceReputacion ?? 0}
+        totalCalificaciones={perfil.totalCalificaciones ?? 0}
+        etiqueta={perfil.etiquetaReputacion ?? 'SIN CALIFICACIONES'}
+      />
+
+      <HistorialCoherencia
         historial={perfil.historial}
       />
 

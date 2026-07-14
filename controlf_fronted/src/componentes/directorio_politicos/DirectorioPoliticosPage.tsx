@@ -82,7 +82,9 @@ const DirectorioPoliticosPage: React.FC = () => {
 
   const handleExportarReporte = async () => {
     try {
-      const response = await fetch('/api/dashboard/export');
+      // Exportación detallada por actor político (CF-022). El endpoint global /api/dashboard/export
+      // se conserva intacto para otros usos.
+      const response = await fetch('/api/dashboard/export/politicos');
       if (!response.ok) {
         throw new Error(`HTTP ${response.status}`);
       }
@@ -91,7 +93,7 @@ const DirectorioPoliticosPage: React.FC = () => {
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.download = `reporte-politicos-${new Date().toISOString().slice(0, 10)}.csv`;
+      link.download = `reporte-politicos-detallado-${new Date().toISOString().slice(0, 10)}.csv`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);

@@ -14,4 +14,7 @@ public class ContenidoLeyDTO {
     private String titulo;
     private String resumenEjecutivo;
     private String impactoSocial;
+    // Estado y categoría reales de la ley (fuente de verdad: BD) para dar trazabilidad en el perfil.
+    private String estado;
+    private String categoria;
 }

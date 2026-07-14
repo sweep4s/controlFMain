@@ -13,4 +13,7 @@ public interface CalificacionRepository extends JpaRepository<Calificacion, Inte
 
     @Query("SELECT AVG(c.puntaje) FROM Calificacion c JOIN Politico p ON c MEMBER OF p.calificaciones WHERE p.id = :politicoId")
     Double findAveragePuntajeByPoliticoId(Integer politicoId);
+
+    @Query("SELECT COUNT(c) FROM Calificacion c JOIN Politico p ON c MEMBER OF p.calificaciones WHERE p.id = :politicoId")
+    long countByPoliticoId(Integer politicoId);
 }

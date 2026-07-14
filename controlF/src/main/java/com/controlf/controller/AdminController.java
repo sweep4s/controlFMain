@@ -46,6 +46,11 @@ public class AdminController {
         adminService.crearPolitico(request);
     }
 
+    @PostMapping("/leyes")
+    public void crearLey(@Valid @RequestBody com.controlf.dto.CrearLeyRequestDTO request) {
+        adminService.crearLey(request);
+    }
+
     @DeleteMapping("/politicos/{id}")
     public void eliminarPolitico(@PathVariable Integer id) {
         adminService.eliminarPolitico(id);

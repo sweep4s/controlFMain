@@ -19,4 +19,8 @@ public interface PoliticoRepository extends JpaRepository<Politico, Integer>, Jp
     java.util.List<String> findDistinctComisiones();
 
     Optional<Politico> findByNombreCompletoContainingIgnoreCase(String nombre);
+
+    // Reverse lookup del comentario ciudadano a su político (para dar contexto en el panel de validación).
+    @org.springframework.data.jpa.repository.Query("SELECT p FROM Politico p JOIN p.comentarios c WHERE c.id = :comentarioId")
+    Optional<Politico> findByComentarioId(Integer comentarioId);
 }

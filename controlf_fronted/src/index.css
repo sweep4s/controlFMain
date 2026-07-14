@@ -41,3 +41,21 @@
     animation: none;
   }
 }
+
+/* Métricas: entrada suave al cambiar de forma de visualización.
+   Cada tarjeta se funde y sube ligeramente; el stagger (animation-delay
+   por tarjeta) produce una cascada discreta y profesional. */
+@keyframes metricFadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.metric-anim-enter {
+  animation: metricFadeIn 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .metric-anim-enter {
+    animation: none;
+  }
+}

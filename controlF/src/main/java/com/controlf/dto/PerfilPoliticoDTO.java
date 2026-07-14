@@ -21,6 +21,12 @@ public class PerfilPoliticoDTO {
     private boolean estaActivo;
     private Double porcentajeCoherencia;
     private String estadoEtiqueta;
+    // Índice de reputación ciudadana (promedio de calificaciones 1-5) y su etiqueta cualitativa.
+    private Double indiceReputacion;
+    private long totalCalificaciones;
+    private String etiquetaReputacion;
     private List<HistorialCoherenciaDTO> historial;
+    // Historial persistente de cambios en patrimonio/antecedentes (CF-005).
+    private List<HistorialCambioPerfilDTO> historialCambios;
     private List<ComentarioDebateDTO> comentarios;
 }

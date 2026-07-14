@@ -46,7 +46,7 @@ const PerfilLeyPage: React.FC = () => {
       await apiFetch(`/api/leyes/${id}/comentarios`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ texto })
+        body: JSON.stringify({ texto, puntaje })
       });
       await apiFetch(`/api/leyes/${id}/calificaciones`, {
         method: 'POST',
@@ -203,8 +203,8 @@ const PerfilLeyPage: React.FC = () => {
         </h2>
         <div className="flex flex-wrap gap-4 text-xs font-bold text-slate-500">
           <span className="bg-slate-100 px-3 py-1 rounded">ID: {perfil.contenido.id}</span>
-          <span className="bg-slate-100 px-3 py-1 rounded">Categoría: {categoria || 'Sin asignar'}</span>
-          <span className="bg-success-green/10 text-success-green px-3 py-1 rounded border border-success-green/20">{estado || 'SIN ESTADO'}</span>
+          <span className="bg-slate-100 px-3 py-1 rounded">Categoría: {perfil.contenido.categoria || 'Sin asignar'}</span>
+          <span className="bg-success-green/10 text-success-green px-3 py-1 rounded border border-success-green/20">{perfil.contenido.estado || 'SIN ESTADO'}</span>
         </div>
         {perfil.votingMatchSummary && (
           <div className="mt-4 grid gap-3 sm:grid-cols-3">
@@ -337,6 +337,7 @@ const PerfilLeyPage: React.FC = () => {
       <ParticipacionCiudadana
         comentarios={perfil.debate.comentarios}
         onAddComentario={handleAddComentario}
+        tipoEntidad="ley"
       />
     </div>
   );

@@ -15,4 +15,6 @@ public class ComentarioDebateDTO {
     private String fecha;
     private String mensaje;
     private String avatarUrl;
+    // Calificación ciudadana (1-5) asociada al comentario, si existe (CF-023).
+    private Integer puntaje;
 }

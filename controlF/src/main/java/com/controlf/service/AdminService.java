@@ -4,6 +4,7 @@ import com.controlf.db.repository.*;
 import com.controlf.db.schema.*;
 import com.controlf.db.schema.enums.ImpactoEsperado;
 import com.controlf.db.schema.enums.NivelCoherencia;
+import com.controlf.dto.CrearLeyRequestDTO;
 import com.controlf.dto.CrearPoliticoRequestDTO;
 import com.controlf.dto.CrearPromesaRequestDTO;
 import com.controlf.dto.ImportResultDTO;
@@ -213,6 +214,49 @@ public class AdminService {
         politico.setCalificaciones(new java.util.ArrayList<>());
         politicoRepository.save(politico);
         registrarLog("CREAR_POLITICO", "Político creado: " + politico.getNombreCompleto());
+    }
+
+    @Transactional
+    public void crearLey(CrearLeyRequestDTO request) {
+        String codigo = request.getCodigo() == null ? "" : request.getCodigo().trim();
+        if (codigo.isEmpty()) {
+            throw new org.springframework.web.server.ResponseStatusException(
+                    org.springframework.http.HttpStatus.BAD_REQUEST, "El código de expediente es obligatorio");
+        }
+        if (leyRepository.findByCodigo(codigo).isPresent()) {
+            throw new org.springframework.web.server.ResponseStatusException(
+                    org.springframework.http.HttpStatus.CONFLICT, "Ya existe una ley con el código " + codigo);
+        }
+
+        Ley ley = new Ley();
+        ley.setTitulo(request.getTitulo() != null ? request.getTitulo().trim() : null);
+        ley.setCodigo(codigo);
+        ley.setTipoExpediente(request.getTipoExpediente());
+        ley.setProponente(request.getProponente());
+        ley.setDescripcionOriginal(request.getDescripcionOriginal());
+        ley.setDescripcionSimplificada(request.getDescripcionSimplificada());
+        ley.setImpactoSocial(request.getImpactoSocial());
+        ley.setCategoria(request.getCategoria());
+        ley.setEstado(parseEstadoLey(request.getEstado()));
+        ley.setFechaIngreso(request.getFechaIngreso() != null ? request.getFechaIngreso() : LocalDate.now());
+        ley.setVotos(new java.util.ArrayList<>());
+        ley.setComentarios(new java.util.ArrayList<>());
+        ley.setCalificaciones(new java.util.ArrayList<>());
+        ley.setVinculos(new java.util.ArrayList<>());
+
+        leyRepository.save(ley);
+        registrarLog("CREAR_LEY", "Ley creada manualmente: " + ley.getCodigo());
+    }
+
+    private com.controlf.db.schema.enums.EstadoLey parseEstadoLey(String estado) {
+        if (estado == null || estado.isBlank()) {
+            return com.controlf.db.schema.enums.EstadoLey.DEBATE;
+        }
+        try {
+            return com.controlf.db.schema.enums.EstadoLey.valueOf(estado.trim().toUpperCase(java.util.Locale.ROOT));
+        } catch (IllegalArgumentException e) {
+            return com.controlf.db.schema.enums.EstadoLey.DEBATE;
+        }
     }
 
     @Transactional

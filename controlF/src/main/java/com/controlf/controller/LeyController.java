@@ -38,6 +38,16 @@ public class LeyController {
         return leyService.getFiltros();
     }
 
+    @GetMapping("/agenda")
+    public AgendaLegislativaDTO getAgenda() {
+        return leyService.getAgendaLegislativa();
+    }
+
+    @GetMapping("/debates")
+    public java.util.List<DebateLegislativoDTO> getDebates(@RequestParam(required = false) String estado) {
+        return leyService.getDebatesLegislativos(estado);
+    }
+
     @GetMapping
     public GrillaLeyesDTO getLeyes(
             @RequestParam(defaultValue = "1") int pagina,

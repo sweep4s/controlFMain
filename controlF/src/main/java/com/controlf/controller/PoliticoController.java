@@ -45,6 +45,11 @@ public class PoliticoController {
         return politicoService.getPoliticosImportables();
     }
 
+    @GetMapping("/comparar")
+    public com.controlf.dto.ComparacionVotosDTO compararPatronesVoto(@RequestParam List<Integer> ids) {
+        return politicoService.compararPatronesVoto(ids);
+    }
+
     @GetMapping
     public com.controlf.dto.GrillaPoliticosDTO getPoliticos(
             @RequestParam(defaultValue = "1") int pagina,

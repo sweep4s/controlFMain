@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import MotorCoherencia from './COMPONENTE_MOTOR_COHERENCIA/MotorCoherencia';
 import MantenimientoSistema from './COMPONENTE_MANTENIMIENTO_DEL_SISTEMA/MantenimientoSistema';
+import RegistroManual from './RegistroManual';
 import { useAuth } from '../../context/AuthContext';
 
 interface AssemblyMember {
@@ -168,15 +169,22 @@ const AdminPage: React.FC = () => {
       setIsLoading(true);
 
       try {
-        const mantRes = await apiFetch('/api/admin/mantenimiento');
+        const [mantRes, historicoRes] = await Promise.all([
+          apiFetch('/api/admin/mantenimiento'),
+          apiFetch('/api/admin/historico')
+        ]);
 
         if (!isMounted) return;
 
-        const maintenanceData = mantRes.ok
-          ? ((await mantRes.json()) as AdminMaintenanceData)
-          : null;
+        const [maintenanceData, historicoData] = await Promise.all([
+          mantRes.ok ? (mantRes.json() as Promise<AdminMaintenanceData>) : Promise.resolve<AdminMaintenanceData | null>(null),
+          historicoRes.ok ? (historicoRes.json() as Promise<HistoricoData>) : Promise.resolve<HistoricoData | null>(null)
+        ]);
+
+        if (!isMounted) return;
 
         setMantenimiento(maintenanceData);
+        setHistorico(historicoData);
       } catch (error) {
         console.error('Error al cargar datos administrativos:', error);
         if (isMounted) {
@@ -494,7 +502,8 @@ const AdminPage: React.FC = () => {
   return (
     // El panel usa flex-col + utilidades "order-*" para presentar las secciones en
     // un flujo lógico para un administrador nuevo, sin alterar la lógica de cada bloque:
-    // 1) Guía  2) Importar datos  3) Motor de coherencia  4) Reporte histórico  5) Mantenimiento.
+    // 1) Guía  2) Importar datos  3) Registro manual  4) Motor de coherencia
+    // 5) Reporte histórico  6) Mantenimiento.
     <div className="max-w-6xl mx-auto pb-12 flex flex-col">
       <div className="mb-8 flex justify-between items-start">
         <div>
@@ -510,8 +519,8 @@ const AdminPage: React.FC = () => {
         </button>
       </div>
 
-      {/* Paso 3 · Motor de coherencia (se usa una vez que ya existen políticos y leyes cargados) */}
-      <div className="order-3">
+      {/* Paso 4 · Motor de coherencia (se usa una vez que ya existen políticos y leyes cargados) */}
+      <div className="order-4">
         <MotorCoherencia />
       </div>
 
@@ -555,8 +564,8 @@ const AdminPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Paso 4 · Reporte histórico para revisar los resultados acumulados del sistema */}
-      <div className="order-4 bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden mb-8">
+      {/* Paso 5 · Reporte histórico para revisar los resultados acumulados del sistema */}
+      <div className="order-5 bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden mb-8">
         <div className="px-8 py-6 border-b border-slate-100 bg-slate-50/50">
           <h4 className="text-sm font-bold text-primary-navy uppercase tracking-wide">Reporte histórico agregado</h4>
         </div>
@@ -580,12 +589,17 @@ const AdminPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Paso 5 · Estado y mantenimiento del sistema (revisión final) */}
-      <div className="order-5">
+      {/* Paso 6 · Estado y mantenimiento del sistema (revisión final) */}
+      <div className="order-6">
         <MantenimientoSistema
           info={mantenimiento ?? defaultMaintenanceData}
           onAccion={handleAccionMantenimiento}
         />
+      </div>
+
+      {/* Paso 3 · Registro manual: crear político (CF-001) o propuesta de ley (CF-007) desde cero */}
+      <div className="order-3 mb-8">
+        <RegistroManual />
       </div>
 
       {/* Paso 2 · Importación de datos: normalmente lo primero que ejecuta un administrador */}
@@ -746,6 +760,43 @@ const AdminPage: React.FC = () => {
 
       <section className="rounded-2xl border border-slate-200 bg-slate-50/70 p-5 shadow-sm mb-6">
         <div className="flex items-start gap-3">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-primary-navy text-sm font-black text-white">
+            2
+          </div>
+          <div className="flex-1">
+            <div className="inline-flex items-center rounded-full bg-primary-navy px-3 py-1 text-[11px] font-black uppercase tracking-[0.2em] text-white">
+              Importar leyes por candidato
+            </div>
+            <h5 className="mt-3 text-lg font-black text-primary-navy">Importar leyes y datos relacionados desde la base local</h5>
+            <p className="mt-2 text-sm text-slate-600">Toma los candidatos que seleccionaste y trae todas sus leyes de una sola vez. Junto con las leyes también se guarda su información de votaciones relacionada.</p>
+            <div className="mt-4 rounded-2xl border border-slate-200 bg-white p-4">
+              <p className="text-xs font-black uppercase tracking-[0.2em] text-slate-500">Confirmar importación</p>
+              <button
+                type="button"
+                onClick={handleImportLeyesPorPoliticos}
+                disabled={isImportingPoliticos || selectedPoliticoIds.length === 0}
+                className="mt-3 w-full rounded-xl bg-primary-navy px-4 py-3 text-sm font-black text-white hover:bg-slate-800 transition-all shadow-sm disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {isImportingPoliticos ? 'Importando leyes...' : 'Importar leyes por candidato'}
+              </button>
+            </div>
+            {politicoImportResult && (
+              <div className="mt-4 rounded-2xl border border-slate-200 bg-white p-4">
+                <p className="text-xs font-black uppercase tracking-[0.2em] text-slate-500">Resultado</p>
+                <div className="mt-4 grid grid-cols-2 lg:grid-cols-4 gap-3">
+                  <div className="rounded-xl border border-slate-200 bg-slate-50 p-3"><p className="text-[10px] font-bold text-slate-500 uppercase">Solicitados</p><p className="mt-2 text-xl font-black text-primary-navy">{politicoImportResult.found}</p></div>
+                  <div className="rounded-xl border border-slate-200 bg-slate-50 p-3"><p className="text-[10px] font-bold text-slate-500 uppercase">Importadas</p><p className="mt-2 text-xl font-black text-primary-navy">{politicoImportResult.imported}</p></div>
+                  <div className="rounded-xl border border-slate-200 bg-slate-50 p-3"><p className="text-[10px] font-bold text-slate-500 uppercase">Ignoradas</p><p className="mt-2 text-xl font-black text-primary-navy">{politicoImportResult.ignored}</p></div>
+                  <div className="rounded-xl border border-slate-200 bg-slate-50 p-3"><p className="text-[10px] font-bold text-slate-500 uppercase">Duplicadas</p><p className="mt-2 text-xl font-black text-primary-navy">{politicoImportResult.duplicates}</p></div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </section>
+
+      <section className="rounded-2xl border border-slate-200 bg-slate-50/70 p-5 shadow-sm">
+        <div className="flex items-start gap-3">
           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-emerald-600 text-sm font-black text-white">
             <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12.79V15a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-2.21"/><path d="M7 10l5-5 5 5"/></svg>
           </div>
@@ -785,43 +836,6 @@ const AdminPage: React.FC = () => {
                 </div>
               )}
             </div>
-          </div>
-        </div>
-      </section>
-
-      <section className="rounded-2xl border border-slate-200 bg-slate-50/70 p-5 shadow-sm">
-        <div className="flex items-start gap-3">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-primary-navy text-sm font-black text-white">
-            2
-          </div>
-          <div className="flex-1">
-            <div className="inline-flex items-center rounded-full bg-primary-navy px-3 py-1 text-[11px] font-black uppercase tracking-[0.2em] text-white">
-              Importar leyes por candidato
-            </div>
-            <h5 className="mt-3 text-lg font-black text-primary-navy">Importar leyes y datos relacionados desde la base local</h5>
-            <p className="mt-2 text-sm text-slate-600">Toma los candidatos que seleccionaste y trae todas sus leyes de una sola vez. Junto con las leyes también se guarda su información de votaciones relacionada.</p>
-            <div className="mt-4 rounded-2xl border border-slate-200 bg-white p-4">
-              <p className="text-xs font-black uppercase tracking-[0.2em] text-slate-500">Confirmar importación</p>
-              <button
-                type="button"
-                onClick={handleImportLeyesPorPoliticos}
-                disabled={isImportingPoliticos || selectedPoliticoIds.length === 0}
-                className="mt-3 w-full rounded-xl bg-primary-navy px-4 py-3 text-sm font-black text-white hover:bg-slate-800 transition-all shadow-sm disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                {isImportingPoliticos ? 'Importando leyes...' : 'Importar leyes por candidato'}
-              </button>
-            </div>
-            {politicoImportResult && (
-              <div className="mt-4 rounded-2xl border border-slate-200 bg-white p-4">
-                <p className="text-xs font-black uppercase tracking-[0.2em] text-slate-500">Resultado</p>
-                <div className="mt-4 grid grid-cols-2 lg:grid-cols-4 gap-3">
-                  <div className="rounded-xl border border-slate-200 bg-slate-50 p-3"><p className="text-[10px] font-bold text-slate-500 uppercase">Solicitados</p><p className="mt-2 text-xl font-black text-primary-navy">{politicoImportResult.found}</p></div>
-                  <div className="rounded-xl border border-slate-200 bg-slate-50 p-3"><p className="text-[10px] font-bold text-slate-500 uppercase">Importadas</p><p className="mt-2 text-xl font-black text-primary-navy">{politicoImportResult.imported}</p></div>
-                  <div className="rounded-xl border border-slate-200 bg-slate-50 p-3"><p className="text-[10px] font-bold text-slate-500 uppercase">Ignoradas</p><p className="mt-2 text-xl font-black text-primary-navy">{politicoImportResult.ignored}</p></div>
-                  <div className="rounded-xl border border-slate-200 bg-slate-50 p-3"><p className="text-[10px] font-bold text-slate-500 uppercase">Duplicadas</p><p className="mt-2 text-xl font-black text-primary-navy">{politicoImportResult.duplicates}</p></div>
-                </div>
-              </div>
-            )}
           </div>
         </div>
       </section>

@@ -24,9 +24,11 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -40,11 +42,17 @@ public class PoliticoService {
     private final UsuarioRepository usuarioRepository;
     private final PromesaRepository promesaRepository;
     private final ConfiguracionRepository configuracionRepository;
+    private final VotoRepository votoRepository;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     public com.controlf.dto.PerfilPoliticoDTO getPoliticoProfile(Integer id) {
         Politico p = politicoRepository.findById(id).orElseThrow();
         Double coherencia = vinculoRepository.findAverageCoherenciaByPoliticoId(p.getId());
+
+        // Índice de reputación consolidado a partir de las calificaciones ciudadanas (escala 1-5).
+        Double reputacion = calificacionRepository.findAveragePuntajeByPoliticoId(p.getId());
+        double reputacionRedondeada = reputacion != null ? Math.round(reputacion * 10.0) / 10.0 : 0.0;
+        long totalCalificaciones = calificacionRepository.countByPoliticoId(p.getId());
 
         List<com.controlf.dto.HistorialCoherenciaDTO> historial = p.getPromesas().stream()
                 .flatMap(promesa -> promesa.getVinculos().stream())
@@ -67,15 +75,123 @@ public class PoliticoService {
                 .estaActivo(p.getEstaActivo())
                 .porcentajeCoherencia(coherencia != null ? coherencia : 0.0)
                 .estadoEtiqueta(determineEstadoEtiqueta(coherencia))
+                .indiceReputacion(reputacionRedondeada)
+                .totalCalificaciones(totalCalificaciones)
+                .etiquetaReputacion(determineEtiquetaReputacion(reputacion, totalCalificaciones))
                 .historial(historial)
-                .comentarios(p.getComentarios().stream().map(c -> com.controlf.dto.ComentarioDebateDTO.builder()
+                .historialCambios(parseHistorialCambios(p.getHistorialActualizaciones()))
+                .comentarios(p.getComentarios().stream().filter(PoliticoService::esComentarioPublico).map(c -> com.controlf.dto.ComentarioDebateDTO.builder()
                         .id(c.getId().toString())
                         .usuario(c.getUsuario().getNombre())
                         .mensaje(c.getTexto())
                         .fecha(c.getFecha().format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy")))
                         .avatarUrl(c.getUsuario().getAvatarUrl())
+                        .puntaje(c.getPuntaje())
                         .build()).collect(Collectors.toList()))
                 .build();
+    }
+
+    /**
+     * Compara los patrones de votación entre dos o más políticos (CF-016): distribución de votos,
+     * asistencia, coherencia y las leyes votadas en común con el sentido del voto de cada uno.
+     */
+    public com.controlf.dto.ComparacionVotosDTO compararPatronesVoto(List<Integer> ids) {
+        List<Integer> unicos = ids == null ? List.of() : ids.stream().filter(java.util.Objects::nonNull).distinct().collect(Collectors.toList());
+        if (unicos.size() < 2) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Debe seleccionar al menos dos políticos para comparar");
+        }
+
+        List<com.controlf.dto.ComparacionPoliticoDTO> resumenes = new ArrayList<>();
+        // leyId -> (politicoId -> sentido del voto)
+        Map<Integer, Map<Integer, String>> votosPorLey = new LinkedHashMap<>();
+        Map<Integer, String> tituloPorLey = new LinkedHashMap<>();
+
+        for (Integer pid : unicos) {
+            Politico p = politicoRepository.findById(pid)
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Político no encontrado: " + pid));
+            List<com.controlf.db.schema.Voto> votos = votoRepository.findByPoliticoId(pid);
+
+            long favor = 0, contra = 0, abstencion = 0, asistencias = 0, inasistencias = 0;
+            for (com.controlf.db.schema.Voto v : votos) {
+                com.controlf.db.schema.enums.TipoVoto tipo = v.getTipoVoto();
+                if (tipo == com.controlf.db.schema.enums.TipoVoto.FAVOR) favor++;
+                else if (tipo == com.controlf.db.schema.enums.TipoVoto.CONTRA) contra++;
+                else if (tipo == com.controlf.db.schema.enums.TipoVoto.ABSTENCION) abstencion++;
+
+                if (Boolean.TRUE.equals(v.getAsistencia())) asistencias++;
+                else inasistencias++;
+
+                if (v.getLey() != null) {
+                    votosPorLey.computeIfAbsent(v.getLey().getId(), k -> new LinkedHashMap<>())
+                            .put(pid, tipo != null ? tipo.name() : "—");
+                    tituloPorLey.putIfAbsent(v.getLey().getId(), v.getLey().getTitulo());
+                }
+            }
+
+            long total = votos.size();
+            double pctAsistencia = total > 0 ? Math.round(asistencias * 1000.0 / total) / 10.0 : 0.0;
+            Double coherencia = vinculoRepository.findAverageCoherenciaByPoliticoId(pid);
+
+            resumenes.add(com.controlf.dto.ComparacionPoliticoDTO.builder()
+                    .id(p.getId().toString())
+                    .nombre(p.getNombreCompleto())
+                    .organizacion(p.getPartidoPolitico())
+                    .fotoUrl(p.getFotoUrl())
+                    .totalVotos(total)
+                    .votosFavor(favor)
+                    .votosContra(contra)
+                    .votosAbstencion(abstencion)
+                    .asistencias(asistencias)
+                    .inasistencias(inasistencias)
+                    .porcentajeAsistencia(pctAsistencia)
+                    .porcentajeCoherencia(coherencia != null ? coherencia : 0.0)
+                    .build());
+        }
+
+        List<com.controlf.dto.ComparacionLeyDTO> leyesComparadas = new ArrayList<>();
+        long enComun = 0;
+        long coincidencias = 0;
+        for (Map.Entry<Integer, Map<Integer, String>> entry : votosPorLey.entrySet()) {
+            Map<Integer, String> porPolitico = entry.getValue();
+            if (porPolitico.size() < 2) {
+                continue; // solo interesa lo votado por dos o más de los comparados
+            }
+            enComun++;
+
+            Map<String, String> votos = new LinkedHashMap<>();
+            for (Integer pid : unicos) {
+                votos.put(pid.toString(), porPolitico.getOrDefault(pid, "—"));
+            }
+
+            Set<String> sentidos = new HashSet<>(porPolitico.values());
+            boolean coinciden = sentidos.size() == 1;
+            if (coinciden) coincidencias++;
+
+            leyesComparadas.add(com.controlf.dto.ComparacionLeyDTO.builder()
+                    .leyId(entry.getKey().toString())
+                    .leyTitulo(tituloPorLey.get(entry.getKey()))
+                    .votos(votos)
+                    .coinciden(coinciden)
+                    .build());
+        }
+
+        double indice = enComun > 0 ? Math.round(coincidencias * 1000.0 / enComun) / 10.0 : 0.0;
+
+        return com.controlf.dto.ComparacionVotosDTO.builder()
+                .politicos(resumenes)
+                .leyesComparadas(leyesComparadas)
+                .leyesEnComun(enComun)
+                .coincidencias(coincidencias)
+                .indiceCoincidencia(indice)
+                .build();
+    }
+
+    /**
+     * Un comentario es público si está APROBADO. Los comentarios previos a la moderación
+     * (estado nulo) se consideran aprobados para no ocultar contenido ya existente (CF-029).
+     */
+    static boolean esComentarioPublico(Comentario c) {
+        return c.getEstado() == null || c.getEstado() == com.controlf.db.schema.enums.EstadoModeracion.APROBADO;
     }
 
     private String findVotoForPolitico(com.controlf.db.schema.Ley ley, Politico p) {
@@ -209,7 +325,8 @@ public com.controlf.dto.GrillaPoliticosDTO getPoliticosFiltrados(int pagina, int
         c.setUsuario(u);
         c.setFecha(LocalDateTime.now());
         c.setEsBasadoEnHechos(false);
-        
+        c.setPuntaje(request.getPuntaje());
+
         comentarioRepository.save(c);
         p.getComentarios().add(c);
         politicoRepository.save(p);
@@ -324,6 +441,44 @@ public com.controlf.dto.GrillaPoliticosDTO getPoliticosFiltrados(int pagina, int
         if (coherencia >= alta) return "COHERENTE";
         if (coherencia >= media) return "AMBIGUO";
         return "INCOHERENTE";
+    }
+
+    /**
+     * Convierte el JSON persistido de historialActualizaciones en una lista ordenada de cambios
+     * (más recientes primero) para exponerlos en el perfil (CF-005).
+     */
+    private List<com.controlf.dto.HistorialCambioPerfilDTO> parseHistorialCambios(String json) {
+        if (json == null || json.isBlank()) {
+            return List.of();
+        }
+        try {
+            List<Map<String, Object>> entries = objectMapper.readValue(json, new TypeReference<>() {});
+            List<com.controlf.dto.HistorialCambioPerfilDTO> cambios = new ArrayList<>();
+            for (Map<String, Object> entry : entries) {
+                cambios.add(com.controlf.dto.HistorialCambioPerfilDTO.builder()
+                        .campo(asText(entry.get("campo")))
+                        .valorAnterior(asText(entry.get("valorAnterior")))
+                        .valorNuevo(asText(entry.get("valorNuevo")))
+                        .fecha(asText(entry.get("fecha")))
+                        .build());
+            }
+            java.util.Collections.reverse(cambios); // más recientes primero
+            return cambios;
+        } catch (Exception e) {
+            return List.of();
+        }
+    }
+
+    private String asText(Object value) {
+        return value == null ? null : value.toString();
+    }
+
+    private String determineEtiquetaReputacion(Double reputacion, long totalCalificaciones) {
+        if (reputacion == null || totalCalificaciones == 0) return "SIN CALIFICACIONES";
+        if (reputacion >= 4.0) return "MUY BUENA";
+        if (reputacion >= 3.0) return "BUENA";
+        if (reputacion >= 2.0) return "REGULAR";
+        return "DEFICIENTE";
     }
 
     private double getThreshold(String clave, double defaultValue) {

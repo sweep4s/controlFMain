@@ -6,6 +6,11 @@ import DirectorioLeyesPage from './componentes/directorio_leyes/DirectorioLeyesP
 import PerfilLeyPage from './componentes/perfil_ley/PerfilLeyPage'
 import AdminPage from './componentes/panel_admin/AdminPage'
 import DashboardPage from './componentes/DashboardPage'
+import AgendaPage from './componentes/agenda/AgendaPage'
+import MetricasPage from './componentes/metricas/MetricasPage'
+import ComparacionPage from './componentes/comparacion/ComparacionPage'
+import AlertasPage from './componentes/alertas/AlertasPage'
+import ValidacionPage from './componentes/validacion/ValidacionPage'
 import LoginPage from './componentes/auth/LoginPage'
 import RegisterPage from './componentes/auth/RegisterPage'
 import ProtectedRoute from './componentes/auth/ProtectedRoute'
@@ -27,6 +32,11 @@ function App() {
         <Route path="politico/:id" element={<PerfilPoliticoPage />} />
         <Route path="leyes" element={<DirectorioLeyesPage />} />
         <Route path="ley/:id" element={<PerfilLeyPage />} />
+        <Route path="agenda" element={<AgendaPage />} />
+        <Route path="metricas" element={<MetricasPage />} />
+        <Route path="comparar" element={<ComparacionPage />} />
+        <Route path="alertas" element={<ProtectedRoute><AlertasPage /></ProtectedRoute>} />
+        <Route path="validacion" element={<ProtectedRoute roles={['VALIDADOR', 'ADMIN']}><ValidacionPage /></ProtectedRoute>} />
         <Route path="admin" element={<ProtectedRoute adminOnly><AdminPage /></ProtectedRoute>} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Route>

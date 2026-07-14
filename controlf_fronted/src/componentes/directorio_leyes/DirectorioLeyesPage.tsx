@@ -65,6 +65,26 @@ const DirectorioLeyesPage: React.FC = () => {
     fetchLeyes(1);
   };
 
+  const handleExportarLeyes = async () => {
+    try {
+      // Exportación detallada por ley (CF-022).
+      const response = await fetch('/api/dashboard/export/leyes');
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const csv = await response.text();
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `reporte-leyes-detallado-${new Date().toISOString().slice(0, 10)}.csv`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error('Error al exportar leyes:', error);
+    }
+  };
+
   return (
     <div className="max-w-6xl mx-auto">
       <BarraBusquedaLeyes
@@ -74,6 +94,16 @@ const DirectorioLeyesPage: React.FC = () => {
         onFilterChange={(id, val) => setFiltros(prev => prev.map(f => f.id === id ? { ...f, valorSeleccionado: val } : f))}
         onSearchSubmit={handleSearchSubmit}
       />
+
+      <div className="flex justify-end mb-4">
+        <button
+          onClick={handleExportarLeyes}
+          className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-xs font-black uppercase tracking-wide text-slate-600 shadow-sm hover:bg-slate-50"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg>
+          Exportar leyes (detalle)
+        </button>
+      </div>
 
       <ListaLeyes
         leyes={leyes}

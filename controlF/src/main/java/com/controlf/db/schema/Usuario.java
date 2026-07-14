@@ -70,6 +70,7 @@ protected void onCreate() {
 }
     public enum Rol {
         ADMIN,
-        CIUDADANO
+        CIUDADANO,
+        VALIDADOR
     }
 }

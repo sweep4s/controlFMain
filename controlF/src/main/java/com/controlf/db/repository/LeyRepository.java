@@ -21,4 +21,8 @@ public interface LeyRepository extends JpaRepository<Ley, Integer>, JpaSpecifica
 
     @org.springframework.data.jpa.repository.Query("SELECT DISTINCT l.categoria FROM Ley l WHERE l.categoria IS NOT NULL")
     java.util.List<String> findDistinctCategorias();
+
+    // Reverse lookup del comentario ciudadano a su ley (para dar contexto en el panel de validación).
+    @org.springframework.data.jpa.repository.Query("SELECT l FROM Ley l JOIN l.comentarios c WHERE c.id = :comentarioId")
+    Optional<Ley> findByComentarioId(Integer comentarioId);
 }
